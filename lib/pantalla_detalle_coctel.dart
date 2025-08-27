@@ -3,58 +3,105 @@ import 'coctel.dart';
 
 class PantallaDetalleCoctel extends StatelessWidget {
   final Coctel coctel;
+  final Function(Coctel)? onFavorito;
 
-  const PantallaDetalleCoctel({super.key, required this.coctel});
+  const PantallaDetalleCoctel({super.key, required this.coctel, this.onFavorito});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: Text(coctel.nombre),
+        backgroundColor: Colors.black,
+        title: Text(
+          coctel.nombre,
+          style: const TextStyle(color: Colors.cyanAccent),
+        ),
+        iconTheme: const IconThemeData(color: Colors.cyanAccent),
       ),
-      body: SingleChildScrollView( // Permite hacer scroll si el contenido es muy largo
-        padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            // Mostramos la imagen desde la URL
-            if (coctel.imagenUrl.isNotEmpty)
-              Center(
-                child: Image.network(
-                  coctel.imagenUrl,
-                  loadingBuilder: (context, child, progress) {
-                    return progress == null ? child : const CircularProgressIndicator();
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.local_bar, size: 100, color: Colors.grey); // Icono si falla la imagen
-                  },
+          children: [
+            // Imagen del cóctel
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.network(
+                coctel.imagenUrl,
+                width: double.infinity,
+                height: 220,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Ingredientes
+            const Text(
+              "Ingredientes",
+              style: TextStyle(
+                color: Colors.cyanAccent,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...coctel.ingredientes.map(
+                  (ing) => Text(
+                "- ${ing.cantidad} ${ing.nombre}",
+                style: const TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Instrucciones
+            const Text(
+              "Preparación",
+              style: TextStyle(
+                color: Colors.cyanAccent,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              coctel.instrucciones,
+              style: const TextStyle(color: Colors.white70, fontSize: 16, height: 1.4),
+            ),
+
+            const SizedBox(height: 30),
+
+            // Botón de favoritos
+            Center(
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.cyanAccent,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+                ),
+                onPressed: () {
+                  if (onFavorito != null) {
+                    onFavorito!(coctel);
+                  }
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Agregado a favoritos"),
+                      backgroundColor: Colors.cyanAccent,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.favorite),
+                label: const Text(
+                  "Agregar a Favoritos",
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
-            const SizedBox(height: 16),
-            Text(
-              coctel.nombre,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Ingredientes:',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            // Usamos un Widget más estructurado para los ingredientes
-            for (var ingrediente in coctel.ingredientes)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Text('• ${ingrediente.cantidad} ${ingrediente.nombre}'),
-              ),
-            const SizedBox(height: 24),
-            Text(
-              'Instrucciones:',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            // La API devuelve las instrucciones como un solo texto
-            Text(coctel.instrucciones),
+            )
           ],
         ),
       ),

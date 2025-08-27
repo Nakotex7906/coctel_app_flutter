@@ -1,3 +1,9 @@
+class Ingrediente {
+  final String nombre;
+  final String cantidad;
+
+  Ingrediente({required this.nombre, required this.cantidad});
+}
 
 class Coctel {
   final String id;
@@ -14,35 +20,29 @@ class Coctel {
     required this.ingredientes,
   });
 
-  // Factory constructor para crear un Coctel desde un mapa JSON
   factory Coctel.fromJson(Map<String, dynamic> json) {
-    List<Ingrediente> ingredientesList = [];
-    for (int i = 1; i <= 15; i++) {
-      final ingredienteNombre = json['strIngredient$i'];
-      final ingredienteCantidad = json['strMeasure$i'];
+    List<Ingrediente> ingredientes = [];
 
-      // Si el ingrediente no es nulo o vacío, lo añadimos a la lista
-      if (ingredienteNombre != null && ingredienteNombre.trim().isNotEmpty) {
-        ingredientesList.add(Ingrediente(
-          nombre: ingredienteNombre,
-          cantidad: ingredienteCantidad ?? '', // Si la cantidad es nula, la dejamos vacía
-        ));
+    for (int i = 1; i <= 15; i++) {
+      final nombre = json['strIngredient$i'];
+      final cantidad = json['strMeasure$i'];
+
+      if (nombre != null && nombre.toString().trim().isNotEmpty) {
+        ingredientes.add(
+          Ingrediente(
+            nombre: nombre.toString(),
+            cantidad: cantidad?.toString() ?? "",
+          ),
+        );
       }
     }
 
     return Coctel(
-      id: json['idDrink'],
-      nombre: json['strDrink'],
-      imagenUrl: json['strDrinkThumb'],
-      instrucciones: json['strInstructions'] ?? 'No instructions available.',
-      ingredientes: ingredientesList,
+      id: json['idDrink'] ?? '',
+      nombre: json['strDrink'] ?? '',
+      imagenUrl: json['strDrinkThumb'] ?? '',
+      instrucciones: json['strInstructions'] ?? '',
+      ingredientes: ingredientes,
     );
   }
-}
-
-class Ingrediente {
-  final String nombre;
-  final String cantidad;
-
-  Ingrediente({required this.nombre, required this.cantidad});
 }
