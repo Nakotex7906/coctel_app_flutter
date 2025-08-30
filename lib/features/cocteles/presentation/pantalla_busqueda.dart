@@ -49,13 +49,14 @@ class PantallaBusquedaState extends State<PantallaBusqueda> {
     }
   }
 
-  void _applyFilters() async {
+  void _applyFilters() {
     setState(() {
-      // Show a loading indicator while fetching and processing
-      _searchResults = Future.value([]);
       _searchController.text = " "; 
+      _searchResults = _getFilteredResults();
     });
+  }
 
+  Future<List<Coctel>> _getFilteredResults() async {
     List<Future<List<Coctel>>> futures = [];
 
     if (_selectedCategory != 'Categoría') {
@@ -69,11 +70,7 @@ class PantallaBusquedaState extends State<PantallaBusqueda> {
     }
 
     if (futures.isEmpty) {
-      setState(() {
-        _searchResults = Future.value([]);
-        _searchController.text = "";
-      });
-      return;
+      return Future.value([]);
     }
 
     // Wait for all API calls to complete
@@ -92,9 +89,7 @@ class PantallaBusquedaState extends State<PantallaBusqueda> {
       }
     }
 
-    setState(() {
-      _searchResults = Future.value(finalResults);
-    });
+    return finalResults;
   }
 
   Widget _buildDropdownButton(String hint, String value, List<String> items, Function(String?) onChanged, Color textColor, Color hintColor) {
