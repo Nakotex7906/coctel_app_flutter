@@ -4,10 +4,12 @@ import 'package:http/http.dart' as http;
 import 'package:translator/translator.dart';
 import '../models/ingrediente.dart';
 import '../../core/models/coctel.dart';
+import 'translation_cache.dart';
 
 class ApiServicio {
   static const String _baseUrl = 'https://www.thecocktaildb.com/api/json/v1/1';
   static final _translator = GoogleTranslator();
+  static final _translationCache = TranslationCache();
 
   // Realiza una solicitud HTTP GET y decodifica la respuesta JSON.
   static Future<dynamic> _fetchJson(String url) async {
@@ -22,8 +24,17 @@ class ApiServicio {
   // Traduce un texto del inglés al español usando la API de Google Translator.
   static Future<String> _traducir(String texto) async {
     if (texto.isEmpty) return '';
+
+    // Check cache first
+    final cachedTranslation = await _translationCache.get(texto);
+    if (cachedTranslation != null) {
+      return cachedTranslation;
+    }
+
     try {
       var traduccion = await _translator.translate(texto, from: 'en', to: 'es');
+      // Save to cache
+      await _translationCache.set(texto, traduccion.text);
       return traduccion.text;
     } catch (e) {
       if (kDebugMode) {
@@ -56,7 +67,7 @@ class ApiServicio {
     return cocteles;
   }
 
-  // Traduce las instrucciones y los ingredientes de una lista de cócteles al español.
+
   static Future<List<Coctel>> _traducirCocteles(List<Coctel> cocteles) async {
     return Future.wait(cocteles.map((coctel) async {
       String instruccionesTraducidas = coctel.instrucciones.isNotEmpty
@@ -83,7 +94,6 @@ class ApiServicio {
     }));
   }
 
-  // Obtiene un cóctel aleatorio de la API.
   static Future<List<Coctel>> coctelAleatorio() async {
     final json = await _fetchJson('$_baseUrl/random.php');
     if (json['drinks'] == null) return [];
@@ -134,7 +144,7 @@ class ApiServicio {
 
   // Filtra y obtiene una lista de cócteles por un tipo de alcohol.
   static Future<List<Coctel>> buscarCoctelesPorAlcohol(String alcohol) async {
-    final json = await _fetchJson('$_baseUrl/filter.php?i=$alcohol');
+    final json = await _fetchJson('$_baseUrl/filter.php?a=$alcohol');
     if (json['drinks'] == null) return [];
     List<String> ids = json['drinks'].map<String>((drink) => drink['idDrink'].toString()).toList();
     List<Coctel> cocteles = await _fetchCoctelesCompletos(ids);
@@ -143,8 +153,8 @@ class ApiServicio {
 
   // Obtiene una lista de todos los tipos de alcohol disponibles en la API.
   static Future<List<String>> obtenerAlcoholes() async {
-    final json = await _fetchJson('$_baseUrl/list.php?i=list');
+    final json = await _fetchJson('$_baseUrl/list.php?a=list');
     if (json['drinks'] == null) return [];
-    return List<String>.from(json['drinks'].map((c) => c['strIngredient1'].toString()));
+    return List<String>.from(json['drinks'].map((c) => c['strAlcoholic'].toString()));
   }
 }
