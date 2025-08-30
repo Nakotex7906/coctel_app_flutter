@@ -17,6 +17,9 @@ class PantallaBusqueda extends StatefulWidget {
 class _PantallaBusquedaState extends State<PantallaBusqueda> {
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  late Future<List<Coctel>> _searchResults;
+
   late Future<List<Coctel>> _sugerencias;
   late Future<List<Coctel>> _coctelesPrincipiantes;
 
@@ -27,18 +30,21 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
   @override
   void initState() {
     super.initState();
+    _searchResults = Future.value([]);
     _sugerencias = ApiServicio.buscarCoctelesPorLetra("m");
     _coctelesPrincipiantes = ApiServicio.buscarCoctelesPorIngrediente("vodka");
   }
 
   void _performSearch(String query) {
-    if (query.isNotEmpty) {
+    final trimmedQuery = query.trim();
+
+    if (trimmedQuery.isNotEmpty) {
       setState(() {
-        _sugerencias = ApiServicio.buscarCoctelesPorNombre(query);
+        _searchResults = ApiServicio.buscarCoctelesPorNombre(trimmedQuery);
       });
     } else {
       setState(() {
-        _sugerencias = ApiServicio.buscarCoctelesPorLetra("m");
+        _searchResults = Future.value([]);
       });
     }
   }
@@ -131,21 +137,35 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 10),
-              Text(
-                "Sugerencias",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: textColor,
+              if (_searchController.text.isEmpty) ...[
+                Text(
+                  "Sugerencias",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 15),
-              _buildCoctelList(_sugerencias, cardColor, textColor, hintColor, isGrid: false, limit: 3),
-              const SizedBox(height: 25),
-              _buildSectionTitle("Cócteles para principiantes", _coctelesPrincipiantes, textColor),
-              const SizedBox(height: 15),
-              _buildCoctelList(_coctelesPrincipiantes, cardColor, textColor, hintColor, isGrid: true, limit: 6),
-              const SizedBox(height: 20),
+                const SizedBox(height: 15),
+                _buildCoctelList(_sugerencias, cardColor, textColor, hintColor, isGrid: false, limit: 3),
+                const SizedBox(height: 25),
+                _buildSectionTitle("Cócteles para principiantes", _coctelesPrincipiantes, textColor),
+                const SizedBox(height: 15),
+                _buildCoctelList(_coctelesPrincipiantes, cardColor, textColor, hintColor, isGrid: true, limit: 6),
+                const SizedBox(height: 20),
+              ] else ...[
+                Text(
+                  "Resultados de la búsqueda",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                _buildCoctelList(_searchResults, cardColor, textColor, hintColor, isGrid: true, limit: null),
+                const SizedBox(height: 20),
+              ],
             ],
           ),
         ),
@@ -270,7 +290,7 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
     );
   }
 
-  Widget _buildCoctelList(Future<List<Coctel>> coctelesFuture, Color cardColor, Color textColor, Color hintColor, {required bool isGrid, int limit = 3}) {
+  Widget _buildCoctelList(Future<List<Coctel>> coctelesFuture, Color cardColor, Color textColor, Color hintColor, {required bool isGrid, int? limit}) {
     return FutureBuilder<List<Coctel>>(
       future: coctelesFuture,
       builder: (context, snapshot) {
@@ -281,7 +301,7 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return Center(child: Text('No se encontraron cócteles.', style: TextStyle(color: textColor)));
         } else {
-          final coctelesToShow = snapshot.data!.take(limit).toList();
+          final coctelesToShow = limit != null ? snapshot.data!.take(limit).toList() : snapshot.data!;
 
           if (isGrid) {
             return GridView.builder(
