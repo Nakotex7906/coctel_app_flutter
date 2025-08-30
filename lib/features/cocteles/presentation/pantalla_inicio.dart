@@ -37,13 +37,10 @@ class PantallaInicioState extends State<PantallaInicio> {
         _nivelSeleccionado = nivel;
         switch (nivel) {
           case "Suave":
-            filtrados = ApiServicio.buscarCoctelesPorAlcohol("Vodka");
-            break;
-          case "Medio":
-            filtrados = ApiServicio.buscarCoctelesPorAlcohol("Gin");
+            filtrados = ApiServicio.buscarCoctelesPorAlcohol("Non_Alcoholic");
             break;
           case "Fuerte":
-            filtrados = ApiServicio.buscarCoctelesPorAlcohol("Rum");
+            filtrados = ApiServicio.buscarCoctelesFuertes();
             break;
           default:
             filtrados = populares;
@@ -59,8 +56,6 @@ class PantallaInicioState extends State<PantallaInicio> {
     switch (nivel) {
       case "Suave":
         return const Color(0xFF81C784); // Verde más suave
-      case "Medio":
-        return const Color(0xFFFFD54F); // Amarillo anaranjado más suave
       case "Fuerte":
         return const Color(0xFFE57373); // Rojo más suave
       default:
@@ -238,7 +233,7 @@ class PantallaInicioState extends State<PantallaInicio> {
               const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: ["Suave", "Medio", "Fuerte"]
+                children: ["Suave", "Fuerte"]
                     .map((nivel) => ElevatedButton(
                   onPressed: () => _filtrarPorNivel(nivel),
                   style: ElevatedButton.styleFrom(
@@ -280,11 +275,12 @@ class PantallaInicioState extends State<PantallaInicio> {
                     if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
                       return Center(child: Text('No se encontraron cócteles.', style: TextStyle(color: textColor)));
                     }
+                    final coctelesToShow = snapshot.data!.take(15).toList();
                     return ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: snapshot.data!.length,
+                      itemCount: coctelesToShow.length,
                       itemBuilder: (context, index) {
-                        final coctel = snapshot.data![index];
+                        final coctel = coctelesToShow[index];
                         return GestureDetector(
                           onTap: () => Navigator.push(
                             context,

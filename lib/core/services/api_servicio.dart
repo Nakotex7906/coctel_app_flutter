@@ -157,4 +157,26 @@ class ApiServicio {
     if (json['drinks'] == null) return [];
     return List<String>.from(json['drinks'].map((c) => c['strAlcoholic'].toString()));
   }
+
+  // Busca cócteles por una lista de ingredientes y los une.
+  static Future<List<Coctel>> _fetchCoctelesPorIngredientes(List<String> ingredientes) async {
+    List<Future<List<Coctel>>> futures = ingredientes
+        .map((ingrediente) => buscarCoctelesPorIngrediente(ingrediente))
+        .toList();
+
+    List<List<Coctel>> results = await Future.wait(futures);
+
+    Map<String, Coctel> coctelesMap = {};
+    for (var list in results) {
+      for (var coctel in list) {
+        coctelesMap[coctel.id] = coctel;
+      }
+    }
+    return coctelesMap.values.toList();
+  }
+
+  // Busca cócteles considerados "fuertes" por su ingrediente principal.
+  static Future<List<Coctel>> buscarCoctelesFuertes() async {
+    return _fetchCoctelesPorIngredientes(["Vodka", "Gin", "Rum", "Tequila", "Whiskey"]);
+  }
 }
