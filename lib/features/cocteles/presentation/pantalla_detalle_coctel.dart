@@ -7,20 +7,19 @@ import '../../../core/services/theme_provider.dart';
 class PantallaDetalleCoctel extends StatefulWidget {
   final Coctel coctel;
 
-  const PantallaDetalleCoctel({Key? key, required this.coctel}) : super(key: key);
+  const PantallaDetalleCoctel({super.key, required this.coctel});
 
   @override
-  State<PantallaDetalleCoctel> createState() => _PantallaDetalleCoctelState();
+  State<PantallaDetalleCoctel> createState() => PantallaDetalleCoctelState();
 }
 
-class _PantallaDetalleCoctelState extends State<PantallaDetalleCoctel> {
+class PantallaDetalleCoctelState extends State<PantallaDetalleCoctel> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
 
     final scaffoldColor = isDarkMode ? const Color(0xFF121212) : Colors.white;
-    final appBarColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white; // No se usa directamente pero se mantiene por consistencia
     final textColor = isDarkMode ? Colors.white : Colors.black87;
     final hintColor = isDarkMode ? Colors.white60 : Colors.grey.shade600;
     final contentCardColor = isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFF2196F3);

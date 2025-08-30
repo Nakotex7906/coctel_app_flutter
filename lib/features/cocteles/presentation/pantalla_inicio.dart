@@ -9,10 +9,10 @@ class PantallaInicio extends StatefulWidget {
   const PantallaInicio({super.key});
 
   @override
-  _PantallaInicioState createState() => _PantallaInicioState();
+  PantallaInicioState createState() => PantallaInicioState();
 }
 
-class _PantallaInicioState extends State<PantallaInicio> {
+class PantallaInicioState extends State<PantallaInicio> {
   late Future<List<Coctel>> recomendados;
   late Future<List<Coctel>> populares;
   late Future<List<Coctel>> filtrados;

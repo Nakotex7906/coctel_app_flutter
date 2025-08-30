@@ -49,7 +49,7 @@ class PantallaAjustes extends StatelessWidget {
                 onChanged: (value) {
                   themeProvider.toggleTheme();
                 },
-                activeColor: const Color(0xFF05AFF2),
+                activeTrackColor: const Color(0xFF05AFF2),
               ),
             ),
             const Divider(),

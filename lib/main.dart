@@ -65,15 +65,16 @@ class InitialLoaderScreen extends StatefulWidget {
   const InitialLoaderScreen({super.key});
 
   @override
-  _InitialLoaderScreenState createState() => _InitialLoaderScreenState();
+  InitialLoaderScreenState createState() => InitialLoaderScreenState();
 }
 
-class _InitialLoaderScreenState extends State<InitialLoaderScreen> {
+class InitialLoaderScreenState extends State<InitialLoaderScreen> {
   Future<void> _initializeApp() async {
     // Simular un tiempo de carga inicial
     await Future.delayed(const Duration(seconds: 2));
 
     // Cargar datos asíncronos si es necesario
+    if (!mounted) return;
     final favoritosManager = Provider.of<FavoritosManager>(context, listen: false);
     await favoritosManager.cargarFavoritos();
   }
@@ -99,10 +100,10 @@ class PantallaLogoWithDelay extends StatefulWidget {
   const PantallaLogoWithDelay({super.key});
 
   @override
-  _PantallaLogoWithDelayState createState() => _PantallaLogoWithDelayState();
+  PantallaLogoWithDelayState createState() => PantallaLogoWithDelayState();
 }
 
-class _PantallaLogoWithDelayState extends State<PantallaLogoWithDelay> {
+class PantallaLogoWithDelayState extends State<PantallaLogoWithDelay> {
   @override
   void initState() {
     super.initState();
@@ -114,6 +115,7 @@ class _PantallaLogoWithDelayState extends State<PantallaLogoWithDelay> {
     await Future.delayed(const Duration(seconds: 3));
 
     // Navega a la pantalla principal y la reemplaza
+    if (!mounted) return;
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -132,10 +134,10 @@ class PantallaPrincipal extends StatefulWidget {
   const PantallaPrincipal({super.key});
 
   @override
-  State<PantallaPrincipal> createState() => _PantallaPrincipalState();
+  State<PantallaPrincipal> createState() => PantallaPrincipalState();
 }
 
-class _PantallaPrincipalState extends State<PantallaPrincipal> {
+class PantallaPrincipalState extends State<PantallaPrincipal> {
   int _selectedIndex = 0;
 
   final List<Widget> _widgetOptions = <Widget>[
@@ -156,8 +158,6 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
     final bottomBarColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
-    final iconColor = isDarkMode ? Colors.white70 : Colors.grey.shade600;
-    final activeIconColor = isDarkMode ? const Color(0xFF05AFF2) : const Color(0xFF05AFF2);
 
     return Scaffold(
       body: _widgetOptions.elementAt(_selectedIndex),

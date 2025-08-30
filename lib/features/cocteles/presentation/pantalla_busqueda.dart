@@ -1,4 +1,3 @@
-
 import 'package:coctel_app/features/cocteles/presentation/pantalla_ver_mas.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -12,10 +11,10 @@ class PantallaBusqueda extends StatefulWidget {
   const PantallaBusqueda({super.key});
 
   @override
-  _PantallaBusquedaState createState() => _PantallaBusquedaState();
+  PantallaBusquedaState createState() => PantallaBusquedaState();
 }
 
-class _PantallaBusquedaState extends State<PantallaBusqueda> {
+class PantallaBusquedaState extends State<PantallaBusqueda> {
   final TextEditingController _searchController = TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -50,8 +49,52 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
     }
   }
 
-  void _applyFilters() {
-    print("Filtros aplicados: Categoría: $_selectedCategory, Ingrediente: $_selectedIngredient, Alcohol: $_selectedAlcohol");
+  void _applyFilters() async {
+    setState(() {
+      // Show a loading indicator while fetching and processing
+      _searchResults = Future.value([]);
+      _searchController.text = " "; 
+    });
+
+    List<Future<List<Coctel>>> futures = [];
+
+    if (_selectedCategory != 'Categoría') {
+      futures.add(ApiServicio.buscarCoctelesPorCategoria(_selectedCategory));
+    }
+    if (_selectedIngredient != 'Ingrediente') {
+      futures.add(ApiServicio.buscarCoctelesPorIngrediente(_selectedIngredient));
+    }
+    if (_selectedAlcohol != 'Alcohol') {
+      futures.add(ApiServicio.buscarCoctelesPorAlcohol(_selectedAlcohol));
+    }
+
+    if (futures.isEmpty) {
+      setState(() {
+        _searchResults = Future.value([]);
+        _searchController.text = "";
+      });
+      return;
+    }
+
+    // Wait for all API calls to complete
+    List<List<Coctel>> results = await Future.wait(futures);
+
+    // Intersect the results
+    List<Coctel> finalResults = [];
+    if (results.isNotEmpty) {
+      // Start with the first list of results
+      finalResults = results[0];
+      
+      // Intersect with the rest of the lists
+      for (int i = 1; i < results.length; i++) {
+        final Set<String> idsToKeep = results[i].map((c) => c.id).toSet();
+        finalResults = finalResults.where((c) => idsToKeep.contains(c.id)).toList();
+      }
+    }
+
+    setState(() {
+      _searchResults = Future.value(finalResults);
+    });
   }
 
   Widget _buildDropdownButton(String hint, String value, List<String> items, Function(String?) onChanged, Color textColor, Color hintColor) {
@@ -347,7 +390,7 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
             borderRadius: BorderRadius.circular(15),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withAlpha(25),
                 spreadRadius: 2,
                 blurRadius: 5,
                 offset: const Offset(0, 3),
@@ -405,7 +448,7 @@ class _PantallaBusquedaState extends State<PantallaBusqueda> {
           borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withAlpha(25),
               spreadRadius: 2,
               blurRadius: 5,
               offset: const Offset(0, 3),

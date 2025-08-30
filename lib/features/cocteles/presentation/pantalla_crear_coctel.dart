@@ -8,10 +8,10 @@ class PantallaCrearCoctel extends StatefulWidget {
   const PantallaCrearCoctel({super.key});
 
   @override
-  _PantallaCrearCoctelState createState() => _PantallaCrearCoctelState();
+  PantallaCrearCoctelState createState() => PantallaCrearCoctelState();
 }
 
-class _PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
+class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _descripcionController = TextEditingController();
   final List<TextEditingController> _ingredienteControllers = [TextEditingController()];
@@ -57,11 +57,6 @@ class _PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
         });
       }
     }
-
-    print("Nombre: $nombre");
-    print("Descripción: $descripcion");
-    print("Ingredientes: $ingredientes");
-    print("Imagen: ${_imageFile?.path}");
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Cóctel publicado (simulado)!')),

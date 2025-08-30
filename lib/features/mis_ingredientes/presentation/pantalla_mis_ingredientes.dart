@@ -15,7 +15,6 @@ class PantallaMisIngredientes extends StatelessWidget {
     final appBarColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
     final textColor = isDarkMode ? Colors.white : Colors.black87;
     final hintColor = isDarkMode ? Colors.white60 : Colors.grey.shade600;
-    final cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.grey.shade100;
 
     return Scaffold(
       backgroundColor: scaffoldColor,

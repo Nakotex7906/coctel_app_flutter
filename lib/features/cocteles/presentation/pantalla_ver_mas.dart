@@ -9,10 +9,10 @@ class PantallaVerTodos extends StatelessWidget {
   final Future<List<Coctel>> coctelesFuture;
 
   const PantallaVerTodos({
-    Key? key,
+    super.key,
     required this.titulo,
     required this.coctelesFuture,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
