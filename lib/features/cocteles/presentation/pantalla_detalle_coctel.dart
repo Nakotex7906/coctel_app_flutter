@@ -20,43 +20,29 @@ class _PantallaDetalleCoctelState extends State<PantallaDetalleCoctel> {
     final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
 
     final scaffoldColor = isDarkMode ? const Color(0xFF121212) : Colors.white;
-    final appBarColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
+    final appBarColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white; // No se usa directamente pero se mantiene por consistencia
     final textColor = isDarkMode ? Colors.white : Colors.black87;
     final hintColor = isDarkMode ? Colors.white60 : Colors.grey.shade600;
     final contentCardColor = isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFF2196F3);
+    final primaryBlue = const Color(0xFF05AFF2); // Definir el azul primario
 
     return Scaffold(
       backgroundColor: scaffoldColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: textColor),
-        actions: [
-          Consumer<FavoritosManager>(
-            builder: (context, favoritosManager, child) {
-              final esFavorito = favoritosManager.esFavorito(widget.coctel.id);
-              return IconButton(
-                icon: Icon(
-                  esFavorito ? Icons.favorite : Icons.favorite_border,
-                  color: Colors.red,
-                ),
-                onPressed: () {
-                  if (esFavorito) {
-                    favoritosManager.eliminarFavorito(widget.coctel);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Eliminado de favoritos")),
-                    );
-                  } else {
-                    favoritosManager.agregarFavorito(widget.coctel);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Agregado a favoritos")),
-                    );
-                  }
-                },
-              );
-            },
+        // 🔹 Flecha de regresar en círculo azul
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 16.0, top: 8.0), // Ajustar el padding si es necesario
+          child: CircleAvatar(
+            backgroundColor: primaryBlue,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
           ),
-        ],
+        ),
+        actions: [], // Eliminamos los actions aquí ya que los botones van en el Positioned
       ),
       extendBodyBehindAppBar: true,
       body: SingleChildScrollView(
@@ -100,21 +86,71 @@ class _PantallaDetalleCoctelState extends State<PantallaDetalleCoctel> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          widget.coctel.nombre,
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                            color: isDarkMode ? Colors.white : Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          widget.coctel.alcohol.isNotEmpty ? "Por ${widget.coctel.alcohol}" : "Cóctel",
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: isDarkMode ? Colors.white70 : Colors.white70,
-                          ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.coctel.nombre,
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDarkMode ? Colors.white : Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    widget.coctel.alcohol.isNotEmpty ? "Por ${widget.coctel.alcohol}" : "Cóctel",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: isDarkMode ? Colors.white70 : Colors.white70,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // 🔹 Botones de enviar y favoritos
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.share, color: Colors.white),
+                                  onPressed: () {
+                                    // Lógica para compartir el cóctel
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("Compartir cóctel")),
+                                    );
+                                  },
+                                ),
+                                Consumer<FavoritosManager>(
+                                  builder: (context, favoritosManager, child) {
+                                    final esFavorito = favoritosManager.esFavorito(widget.coctel.id);
+                                    return IconButton(
+                                      icon: Icon(
+                                        esFavorito ? Icons.favorite : Icons.favorite_border,
+                                        color: Colors.red,
+                                      ),
+                                      onPressed: () {
+                                        if (esFavorito) {
+                                          favoritosManager.eliminarFavorito(widget.coctel);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text("Eliminado de favoritos")),
+                                          );
+                                        } else {
+                                          favoritosManager.agregarFavorito(widget.coctel);
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text("Agregado a favoritos")),
+                                          );
+                                        }
+                                      },
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
