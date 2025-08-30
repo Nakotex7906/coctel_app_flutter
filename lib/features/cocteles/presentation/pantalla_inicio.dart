@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/coctel.dart';
@@ -17,6 +18,7 @@ class PantallaInicioState extends State<PantallaInicio> {
   late Future<List<Coctel>> populares;
   late Future<List<Coctel>> filtrados;
   String _nivelSeleccionado = "";
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -26,27 +28,36 @@ class PantallaInicioState extends State<PantallaInicio> {
     filtrados = populares;
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
   void _filtrarPorNivel(String nivel) {
-    if (_nivelSeleccionado == nivel) {
-      setState(() {
-        _nivelSeleccionado = "";
-        filtrados = populares;
-      });
-    } else {
-      setState(() {
-        _nivelSeleccionado = nivel;
-        switch (nivel) {
-          case "Suave":
-            filtrados = ApiServicio.buscarCoctelesPorAlcohol("Non_Alcoholic");
-            break;
-          case "Fuerte":
-            filtrados = ApiServicio.buscarCoctelesFuertes();
-            break;
-          default:
-            filtrados = populares;
-        }
-      });
-    }
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      if (_nivelSeleccionado == nivel) {
+        setState(() {
+          _nivelSeleccionado = "";
+          filtrados = populares;
+        });
+      } else {
+        setState(() {
+          _nivelSeleccionado = nivel;
+          switch (nivel) {
+            case "Suave":
+              filtrados = ApiServicio.buscarCoctelesPorAlcohol("Non_Alcoholic");
+              break;
+            case "Fuerte":
+              filtrados = ApiServicio.buscarCoctelesFuertes();
+              break;
+            default:
+              filtrados = populares;
+          }
+        });
+      }
+    });
   }
 
   Color _colorNivel(String nivel) {

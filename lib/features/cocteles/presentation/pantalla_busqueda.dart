@@ -60,21 +60,31 @@ class PantallaBusquedaState extends State<PantallaBusqueda> {
     List<Future<List<Coctel>>> futures = [];
 
     if (_selectedCategory != 'Categoría') {
-      futures.add(ApiServicio.buscarCoctelesPorCategoria(_selectedCategory));
+      final category = _selectedCategory.replaceAll(' ', '_');
+      futures.add(ApiServicio.buscarCoctelesPorCategoria(category));
     }
     if (_selectedIngredient != 'Ingrediente') {
-      futures.add(ApiServicio.buscarCoctelesPorIngrediente(_selectedIngredient));
+      final ingredient = _selectedIngredient.replaceAll(' ', '_');
+      futures.add(ApiServicio.buscarCoctelesPorIngrediente(ingredient));
     }
     if (_selectedAlcohol != 'Alcohol') {
-      futures.add(ApiServicio.buscarCoctelesPorAlcohol(_selectedAlcohol));
+      final alcohol = _selectedAlcohol.replaceAll('-', '_');
+      futures.add(ApiServicio.buscarCoctelesPorAlcohol(alcohol));
     }
 
     if (futures.isEmpty) {
       return Future.value([]);
     }
 
-    // Wait for all API calls to complete
-    List<List<Coctel>> results = await Future.wait(futures);
+    List<List<Coctel>> results = [];
+    try {
+      // Wait for all API calls to complete
+      results = await Future.wait(futures);
+    } catch (e) {
+      // Log the error and return an empty list or rethrow, depending on desired behavior
+      debugPrint('Error al obtener resultados filtrados: $e');
+      return Future.value([]); // Return empty list on error
+    }
 
     // Intersect the results
     List<Coctel> finalResults = [];

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:translator/translator.dart';
@@ -10,15 +11,40 @@ class ApiServicio {
   static const String _baseUrl = 'https://www.thecocktaildb.com/api/json/v1/1';
   static final _translator = GoogleTranslator();
   static final _translationCache = TranslationCache();
+  static final Random _random = Random();
 
   // Realiza una solicitud HTTP GET y decodifica la respuesta JSON.
-  static Future<dynamic> _fetchJson(String url) async {
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Error cargando datos de la API: $url');
+  static Future<dynamic> _fetchJson(String url, {int retries = 5}) async {
+    for (int i = 0; i < retries; i++) {
+      try {
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          return jsonDecode(response.body);
+        } else if (response.statusCode == 429) {
+          if (kDebugMode) {
+            print('Error 429 (Too Many Requests) al cargar datos de la API desde: $url. Reintentando...');
+          }
+          // Exponential backoff with jitter for 429 errors
+          final int delay = (pow(2, i) * 1000 + _random.nextInt(1000)).toInt(); // 1s, 2s, 4s, 8s, 16s + jitter
+          await Future.delayed(Duration(milliseconds: delay));
+        } else {
+          if (kDebugMode) {
+            print('Error HTTP ${response.statusCode} al cargar datos de la API desde: $url');
+            print('Cuerpo de la respuesta: ${response.body}');
+          }
+          // For other non-200 errors, use linear backoff
+          await Future.delayed(Duration(milliseconds: 500 * (i + 1)));
+        }
+      } catch (e) {
+        // Log the error
+        if (kDebugMode) {
+          print('Error en la solicitud HTTP: $e para la URL: $url');
+        }
+        // For network errors, use linear backoff
+        await Future.delayed(Duration(milliseconds: 500 * (i + 1)));
+      }
     }
+    throw Exception('Error cargando datos de la API: $url');
   }
 
   // Traduce un texto del inglés al español usando la API de Google Translator.
