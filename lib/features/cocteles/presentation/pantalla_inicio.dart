@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/models/coctel.dart';
+import 'package:coctel_app/core/models/coctel.dart';
 import '../../../core/services/api_servicio.dart';
 import '../../../core/services/theme_provider.dart';
 import 'pantalla_detalle_coctel.dart';

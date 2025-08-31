@@ -1,7 +1,7 @@
 import 'package:coctel_app/features/cocteles/presentation/pantalla_ver_mas.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/models/coctel.dart';
+import 'package:coctel_app/core/models/coctel.dart';
 import '../../../core/services/api_servicio.dart';
 import 'package:coctel_app/core/services/theme_provider.dart';
 import '../../mis_ingredientes/presentation/pantalla_mis_ingredientes.dart';

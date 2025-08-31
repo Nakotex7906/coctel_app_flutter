@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:translator/translator.dart';
 import '../models/ingrediente.dart';
-import '../../core/models/coctel.dart';
+import 'package:coctel_app/core/models/coctel.dart';
 import 'package:coctel_app/core/services/translation_cache.dart';
 
 class ApiServicio {

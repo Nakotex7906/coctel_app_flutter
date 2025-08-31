@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/models/coctel.dart';
+import 'package:coctel_app/core/models/coctel.dart';
 
 class FavoritosManager extends ChangeNotifier {
   List<Coctel> _favoritos = [];
