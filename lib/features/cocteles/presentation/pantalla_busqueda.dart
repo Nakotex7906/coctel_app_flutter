@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/models/coctel.dart';
 import '../../../core/services/api_servicio.dart';
-import '../../../core/services/theme_provider.dart';
+import 'package:coctel_app/core/services/theme_provider.dart';
 import '../../mis_ingredientes/presentation/pantalla_mis_ingredientes.dart';
 import 'pantalla_detalle_coctel.dart';
 
@@ -51,7 +51,7 @@ class PantallaBusquedaState extends State<PantallaBusqueda> {
 
   void _applyFilters() {
     setState(() {
-      _searchController.text = " "; 
+      _searchController.text = " ";
       _searchResults = _getFilteredResults();
     });
   }
@@ -91,7 +91,7 @@ class PantallaBusquedaState extends State<PantallaBusqueda> {
     if (results.isNotEmpty) {
       // Start with the first list of results
       finalResults = results[0];
-      
+
       // Intersect with the rest of the lists
       for (int i = 1; i < results.length; i++) {
         final Set<String> idsToKeep = results[i].map((c) => c.id).toSet();
@@ -116,7 +116,7 @@ class PantallaBusquedaState extends State<PantallaBusqueda> {
           borderRadius: BorderRadius.circular(10),
         ),
       ),
-      value: value,
+      initialValue: value,
       dropdownColor: Theme.of(context).cardColor,
       style: TextStyle(color: textColor),
       items: items.map<DropdownMenuItem<String>>((String item) {

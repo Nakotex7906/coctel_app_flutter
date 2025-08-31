@@ -46,8 +46,6 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
 
   void _publishCoctel() {
     // TODO: Implementar la lógica para publicar el cóctel
-    final String nombre = _nombreController.text;
-    final String descripcion = _descripcionController.text;
     final List<Map<String, String>> ingredientes = [];
     for (int i = 0; i < _ingredienteControllers.length; i++) {
       if (_ingredienteControllers[i].text.isNotEmpty) {
