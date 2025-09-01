@@ -8,6 +8,7 @@ class Coctel {
   final String alcohol;
   final String categoria;
   final List<Ingrediente> ingredientes;
+  final bool isLocal;
 
   Coctel({
     required this.id,
@@ -17,6 +18,7 @@ class Coctel {
     required this.alcohol,
     required this.categoria,
     required this.ingredientes,
+    this.isLocal = false,
   });
 
   factory Coctel.fromJson(Map<String, dynamic> json) {
@@ -48,6 +50,7 @@ class Coctel {
       alcohol: json['strAlcoholic'] ?? '',
       categoria: json['strCategory'] ?? '',
       ingredientes: ingredientes,
+      isLocal: json['isLocal'] ?? false,
     );
   }
 
@@ -60,6 +63,7 @@ class Coctel {
       'alcohol': alcohol,
       'categoria': categoria,
       'ingredientes': ingredientes.map((e) => e.toJson()).toList(),
+      'isLocal': isLocal,
     };
   }
 }

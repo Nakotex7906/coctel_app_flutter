@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:coctel_app/core/services/cocteles_creados_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:coctel_app/core/models/coctel.dart';
@@ -87,6 +89,8 @@ class PantallaInicioState extends State<PantallaInicio> {
     final textColor = isDarkMode ? Colors.white : const Color(0xFF010D00);
     final cardColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
     final backgroundColor = isDarkMode ? const Color(0xFF121212) : const Color(0xFFF2F2F2);
+    final coctelesCreadosManager = Provider.of<CoctelesCreadosManager>(context);
+    final coctelesCreados = coctelesCreadosManager.coctelesCreados;
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -190,12 +194,7 @@ class PantallaInicioState extends State<PantallaInicio> {
                         children: [
                           ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              coctel.imagenUrl,
-                              width: 130,
-                              height: 130,
-                              fit: BoxFit.cover,
-                            ),
+                            child: _buildCoctelImage(coctel, width: 130, height: 130),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -316,12 +315,7 @@ class PantallaInicioState extends State<PantallaInicio> {
                                 ClipRRect(
                                   borderRadius: const BorderRadius.horizontal(
                                       left: Radius.circular(16)),
-                                  child: Image.network(
-                                    coctel.imagenUrl,
-                                    width: 110,
-                                    height: 190,
-                                    fit: BoxFit.cover,
-                                  ),
+                                  child: _buildCoctelImage(coctel, width: 110, height: 190),
                                 ),
                                 Expanded(
                                   child: Padding(
@@ -379,10 +373,137 @@ class PantallaInicioState extends State<PantallaInicio> {
                 ),
               ),
               const SizedBox(height: 30),
+              if (coctelesCreados.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text("Cocteles creados por ti",
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: textColor)),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    height: 190,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: coctelesCreados.length,
+                      itemBuilder: (context, index) {
+                        final coctel = coctelesCreados[index];
+                        return GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => PantallaDetalleCoctel(coctel: coctel)),
+                          ),
+                          child: Container(
+                            width: 240,
+                            margin: const EdgeInsets.only(left: 16),
+                            decoration: BoxDecoration(
+                              color: cardColor,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: isDarkMode ? Colors.black54 : Colors.black12,
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4))
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.horizontal(
+                                      left: Radius.circular(16)),
+                                  child: _buildCoctelImage(coctel, width: 110, height: 190),
+                                ),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                coctel.nombre,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                    color: textColor),
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(Icons.star_border,
+                                                  color: Colors.amber),
+                                              onPressed: () {
+                                                // TODO: favoritos
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: coctel.ingredientes
+                                              .map((e) => Text(
+                                            e.nombre,
+                                            style: TextStyle(
+                                                fontSize: 13, color: isDarkMode ? Colors.white70 : Colors.black54),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ))
+                                              .toList(),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                ],
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Widget _buildCoctelImage(Coctel coctel, {double width = 100, double height = 100}) {
+    if (coctel.isLocal && coctel.imagenUrl.isNotEmpty) {
+      return Image.file(
+        File(coctel.imagenUrl),
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+      );
+    } else if (coctel.imagenUrl.isNotEmpty) {
+      return Image.network(
+        coctel.imagenUrl,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+      );
+    } else {
+      return Container(
+        width: width,
+        height: height,
+        color: Colors.grey.shade300,
+        child: const Icon(Icons.no_photography, size: 50, color: Colors.grey),
+      );
+    }
   }
 }

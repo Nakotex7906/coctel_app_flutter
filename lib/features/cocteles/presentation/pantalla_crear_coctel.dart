@@ -1,3 +1,6 @@
+import 'package:coctel_app/core/models/coctel.dart';
+import 'package:coctel_app/core/models/ingrediente.dart';
+import 'package:coctel_app/core/services/cocteles_creados_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -45,19 +48,38 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
   }
 
   void _publishCoctel() {
-    // TODO: Implementar la lógica para publicar el cóctel
-    final List<Map<String, String>> ingredientes = [];
+    if (_nombreController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('El nombre del cóctel no puede estar vacío.')),
+      );
+      return;
+    }
+
+    final List<Ingrediente> ingredientes = [];
     for (int i = 0; i < _ingredienteControllers.length; i++) {
       if (_ingredienteControllers[i].text.isNotEmpty) {
-        ingredientes.add({
-          "nombre": _ingredienteControllers[i].text,
-          "medida": _medidaControllers[i].text,
-        });
+        ingredientes.add(Ingrediente(
+          nombre: _ingredienteControllers[i].text,
+          cantidad: _medidaControllers[i].text,
+        ));
       }
     }
 
+    final nuevoCoctel = Coctel(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      nombre: _nombreController.text,
+      instrucciones: _descripcionController.text,
+      imagenUrl: _imageFile?.path ?? '',
+      alcohol: 'Personalizado',
+      categoria: 'Personalizado',
+      ingredientes: ingredientes,
+      isLocal: true,
+    );
+
+    Provider.of<CoctelesCreadosManager>(context, listen: false).agregarCoctel(nuevoCoctel);
+
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cóctel publicado (simulado)!')),
+      const SnackBar(content: Text('¡Cóctel creado con éxito!')),
     );
     Navigator.pop(context);
   }

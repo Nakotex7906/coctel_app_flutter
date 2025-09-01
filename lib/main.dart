@@ -1,3 +1,4 @@
+import 'package:coctel_app/core/services/cocteles_creados_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/services/theme_provider.dart';
@@ -16,6 +17,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => FavoritosManager()),
+        ChangeNotifierProvider(create: (_) => CoctelesCreadosManager()),
       ],
       child: const MyApp(),
     ),
@@ -77,6 +79,8 @@ class InitialLoaderScreenState extends State<InitialLoaderScreen> {
     if (!mounted) return;
     final favoritosManager = Provider.of<FavoritosManager>(context, listen: false);
     await favoritosManager.cargarFavoritos();
+    final coctelesCreadosManager = Provider.of<CoctelesCreadosManager>(context, listen: false);
+    await coctelesCreadosManager.cargarCoctelesCreados();
   }
 
   @override
