@@ -154,6 +154,7 @@ class PantallaBusquedaState extends State<PantallaBusqueda> {
         backgroundColor: scaffoldColor,
         elevation: 0,
         toolbarHeight: 80,
+        actions: const [SizedBox.shrink()],
         flexibleSpace: Padding(
           padding: const EdgeInsets.only(top: 40.0, left: 16, right: 16, bottom: 8),
           child: Container(
@@ -172,6 +173,15 @@ class PantallaBusquedaState extends State<PantallaBusqueda> {
                   icon: Icon(Icons.search, color: hintColor),
                   onPressed: () => _performSearch(_searchController.text),
                 ),
+                suffixIcon: Padding(
+                  padding: const EdgeInsets.only(right: 8.0), // mueve el icono hacia la izquierda
+                  child: IconButton(
+                    icon: Icon(Icons.menu_rounded, color: hintColor),
+                    onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+                  ),
+                ),
+                suffixIconConstraints: const BoxConstraints(minWidth: 40, minHeight: 40),
+
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
               ),
