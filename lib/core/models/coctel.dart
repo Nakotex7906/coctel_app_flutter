@@ -20,14 +20,14 @@ class Coctel {
   });
 
   factory Coctel.fromJson(Map<String, dynamic> json) {
-    return Coctel(
-      id: json['idDrink'] ?? json['id'] ?? '',
-      nombre: json['strDrink'] ?? json['nombre'] ?? '',
-      instrucciones: json['strInstructions'] ?? json['instrucciones'] ?? '',
-      imagenUrl: json['strDrinkThumb'] ?? json['imagenUrl'] ?? '',
-      alcohol: json['strAlcoholic'] ?? '',
-      categoria: json['strCategory'] ?? '',
-      ingredientes: List.generate(15, (i) {
+    List<Ingrediente> ingredientes = [];
+    if (json['ingredientes'] != null) {
+      // Si el JSON viene de SharedPreferences
+      var ingList = json['ingredientes'] as List;
+      ingredientes = ingList.map((i) => Ingrediente.fromJson(i)).toList();
+    } else {
+      // Si el JSON viene de la API
+      ingredientes = List.generate(15, (i) {
         final nombreIng = json['strIngredient${i + 1}'];
         final medida = json['strMeasure${i + 1}'];
         if (nombreIng != null && nombreIng.toString().isNotEmpty) {
@@ -37,7 +37,17 @@ class Coctel {
           );
         }
         return null;
-      }).whereType<Ingrediente>().toList(),
+      }).whereType<Ingrediente>().toList();
+    }
+
+    return Coctel(
+      id: json['idDrink'] ?? json['id'] ?? '',
+      nombre: json['strDrink'] ?? json['nombre'] ?? '',
+      instrucciones: json['strInstructions'] ?? json['instrucciones'] ?? '',
+      imagenUrl: json['strDrinkThumb'] ?? json['imagenUrl'] ?? '',
+      alcohol: json['strAlcoholic'] ?? '',
+      categoria: json['strCategory'] ?? '',
+      ingredientes: ingredientes,
     );
   }
 
