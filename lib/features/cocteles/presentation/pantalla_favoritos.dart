@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:coctel_app/core/models/coctel.dart';
@@ -95,18 +96,7 @@ class PantallaFavoritos extends StatelessWidget {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(12),
-                          child: Image.network(
-                            coctel.imagenUrl,
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              width: 100,
-                              height: 100,
-                              color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
-                              child: Icon(Icons.broken_image, color: hintColor, size: 40),
-                            ),
-                          ),
+                          child: _buildCoctelImage(coctel, width: 100, height: 100, hintColor: hintColor, isDarkMode: isDarkMode),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -158,5 +148,42 @@ class PantallaFavoritos extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Widget _buildCoctelImage(Coctel coctel, {required double width, required double height, required Color hintColor, required bool isDarkMode}) {
+    if (coctel.isLocal && coctel.imagenUrl.isNotEmpty) {
+      return Image.file(
+        File(coctel.imagenUrl),
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: width,
+          height: height,
+          color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+          child: Icon(Icons.broken_image, color: hintColor, size: 40),
+        ),
+      );
+    } else if (coctel.imagenUrl.isNotEmpty) {
+      return Image.network(
+        coctel.imagenUrl,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: width,
+          height: height,
+          color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+          child: Icon(Icons.broken_image, color: hintColor, size: 40),
+        ),
+      );
+    } else {
+      return Container(
+        width: width,
+        height: height,
+        color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+        child: Icon(Icons.no_photography, color: hintColor, size: 40),
+      );
+    }
   }
 }
