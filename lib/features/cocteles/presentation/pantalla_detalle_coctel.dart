@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:coctel_app/core/models/coctel.dart';
@@ -52,18 +53,7 @@ class PantallaDetalleCoctelState extends State<PantallaDetalleCoctel> {
               children: [
                 Hero(
                   tag: widget.coctel.id,
-                  child: Image.network(
-                    widget.coctel.imagenUrl,
-                    width: double.infinity,
-                    height: 350,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      width: double.infinity,
-                      height: 350,
-                      color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
-                      child: Icon(Icons.broken_image, size: 80, color: hintColor),
-                    ),
-                  ),
+                  child: _buildCoctelImage(widget.coctel, width: double.infinity, height: 350, hintColor: hintColor, isDarkMode: isDarkMode),
                 ),
                 Positioned(
                   bottom: 0,
@@ -201,5 +191,42 @@ class PantallaDetalleCoctelState extends State<PantallaDetalleCoctel> {
         ),
       ),
     );
+  }
+
+  Widget _buildCoctelImage(Coctel coctel, {required double width, required double height, required Color hintColor, required bool isDarkMode}) {
+    if (coctel.isLocal && coctel.imagenUrl.isNotEmpty) {
+      return Image.file(
+        File(coctel.imagenUrl),
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: width,
+          height: height,
+          color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+          child: Icon(Icons.broken_image, size: 80, color: hintColor),
+        ),
+      );
+    } else if (coctel.imagenUrl.isNotEmpty) {
+      return Image.network(
+        coctel.imagenUrl,
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          width: width,
+          height: height,
+          color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+          child: Icon(Icons.broken_image, size: 80, color: hintColor),
+        ),
+      );
+    } else {
+      return Container(
+        width: width,
+        height: height,
+        color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+        child: Icon(Icons.no_photography, size: 80, color: hintColor),
+      );
+    }
   }
 }
