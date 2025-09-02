@@ -3,6 +3,7 @@ import 'package:coctel_app/features/cocteles/presentation/pantalla_ver_mas.dart'
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:coctel_app/core/models/coctel.dart';
+import 'package:flutter/foundation.dart'; // Añadido para kDebugMode
 import '../../../core/services/api_servicio.dart';
 import 'package:coctel_app/core/services/theme_provider.dart';
 import 'package:coctel_app/core/services/cocteles_creados_manager.dart'; 
@@ -74,15 +75,29 @@ class PantallaBusquedaState extends State<PantallaBusqueda> {
       _coctelesPrincipiantesFuture = ApiServicio.buscarCoctelesPorIngrediente("vodka");
 
       final categories = await ApiServicio.obtenerCategorias();
+      if (kDebugMode) { // Línea añadida para depuración
+        print('Categorías obtenidas: $categories'); // Línea añadida para depuración
+      }
       if (!mounted) return;
 
-      final apiServicio = ApiServicio();
-      final ingredients = await apiServicio.listIngredients();
+      // Llamada estática a listIngredients
+      final ingredients = await ApiServicio.listIngredients(); 
+      if (kDebugMode) { // Línea añadida para depuración
+        print('Ingredientes obtenidos: $ingredients'); // Línea añadida para depuración
+      }
       if (!mounted) return;
       
+      // Asegurarse de que las listas de opciones siempre contengan el valor por defecto
+      // y también los valores cargados, evitando duplicados si ya existen.
+      final Set<String> uniqueCategories = {'Categoría'};
+      uniqueCategories.addAll(categories.map((c) => c.replaceAll('_', ' ')));
+
+      final Set<String> uniqueIngredients = {'Ingrediente'};
+      uniqueIngredients.addAll(ingredients.map((i) => i.replaceAll('_', ' ')));
+      
       setState(() {
-        _categoryOptions = ['Categoría', ...categories.map((c) => c.replaceAll('_', ' '))];
-        _ingredientOptions = ['Ingrediente', ...ingredients.map((i) => i.replaceAll('_', ' '))];
+        _categoryOptions = uniqueCategories.toList();
+        _ingredientOptions = uniqueIngredients.toList();
       });
     } catch (e) {
       if (!mounted) return;
@@ -104,9 +119,11 @@ class PantallaBusquedaState extends State<PantallaBusqueda> {
       _mostrarSugerencias = false;
 
       // Si el campo de búsqueda está vacío, ponemos un espacio para diferenciar de "mostrarSugerencias"
+      /*
       if (_searchController.text.trim().isEmpty && (_selectedCategory != 'Categoría' || _selectedIngredient != 'Ingrediente' || _selectedAlcohol != 'Alcohol')) {
           _searchController.text = " "; 
       }
+      */
     });
     
     final results = await _performSearchAndFilter();

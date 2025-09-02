@@ -164,7 +164,26 @@ class ApiServicio {
   static Future<List<String>> obtenerCategorias() async {
     final json = await _fetchJson('$_baseUrl/list.php?c=list');
     if (json['drinks'] == null) return [];
+    
     return List<String>.from(json['drinks'].map((c) => c['strCategory'].toString()));
+  }
+
+  // Obtiene una lista de todos los ingredientes disponibles.
+  static Future<List<String>> listIngredients() async {
+    try {
+      final json = await ApiServicio._fetchJson('${ApiServicio._baseUrl}/list.php?i=list');
+      if (json['drinks'] == null) return [];
+      final items = (json['drinks'] as List?) ?? [];
+      return items
+          .map((e) => (e as Map<String, dynamic>)['strIngredient1'] as String?)
+          .whereType<String>()
+          .toList();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error obteniendo ingredientes: $e');
+      }
+      return []; // Devuelve lista vacía en caso de error
+    }
   }
 
   // Filtra y obtiene una lista de cócteles por un tipo de alcohol.
@@ -173,6 +192,7 @@ class ApiServicio {
     if (json['drinks'] == null) return [];
     List<String> ids = json['drinks'].map<String>((drink) => drink['idDrink'].toString()).toList();
     List<Coctel> cocteles = await _fetchCoctelesCompletos(ids);
+    
     return _traducirCocteles(cocteles);
   }
 
@@ -180,6 +200,7 @@ class ApiServicio {
   static Future<List<String>> obtenerAlcoholes() async {
     final json = await _fetchJson('$_baseUrl/list.php?a=list');
     if (json['drinks'] == null) return [];
+    
     return List<String>.from(json['drinks'].map((c) => c['strAlcoholic'].toString()));
   }
 
@@ -205,25 +226,22 @@ class ApiServicio {
     return _fetchCoctelesPorIngredientes(["Vodka", "Gin", "Rum", "Tequila", "Whiskey"]);
   }
 }
+
 extension ApiServicioIngredientes on ApiServicio {
-  /// FREE: Devuelve tragos que contengan UN ingrediente.
-  /// Usa `filter.php?i=` de TheCocktailDB (clave de prueba "1").
+  
+  // Devuelve tragos que contengan UN ingrediente.
   Future<List<DrinkSummary>> filterByIngredient(String ingredient) async {
     if (ingredient.trim().isEmpty) return [];
-    final uri = Uri.parse('$ApiServicio._baseUrl/filter.php?i=${_toToken(ingredient)}');
+    final uri = Uri.parse('${ApiServicio._baseUrl}/filter.php?i=${_toToken(ingredient)}');
     final res = await http.get(uri);
     if (res.statusCode != 200) return [];
     final body = json.decode(res.body) as Map<String, dynamic>;
     final list = (body['drinks'] as List?) ?? [];
     return list.map((e) => DrinkSummary.fromJson(e as Map<String, dynamic>)).toList();
   }
-  /// FREE: Búsqueda por VARIOS ingredientes combinados.
-  /// Implementa la intersección por idDrink realizando varias llamadas
-  /// a `filter.php?i=` (una por ingrediente) y quedándose con los IDs comunes.
-  ///
-  /// NOTA: La API oficial sólo permite multi-ingrediente en una sola llamada
-  /// en el plan Premium; en free hay que hacer esta intersección manual. :contentReference[oaicite:0]{index=0}
+  // Búsqueda por varios ingredientes combinados.
   Future<List<DrinkSummary>> filterByIngredients(List<String> ingredients) async {
+    
     // Limpieza básica
     final cleaned = ingredients
         .map((e) => e.trim())
@@ -250,27 +268,25 @@ extension ApiServicioIngredientes on ApiServicio {
     }
     return common.map((id) => index[id]).whereType<DrinkSummary>().toList();
   }
-  /// Detalle completo de un trago por ID (`lookup.php?i=`).
-  /// Útil si quieres mostrar ingredientes, medidas e instrucciones. :contentReference[oaicite:1]{index=1}
+  // Detalle completo de un trago por ID 
   Future<Map<String, dynamic>?> lookupDrink(String idDrink) async {
-    final uri = Uri.parse('$ApiServicio/lookup.php?i=$idDrink');
+    final uri = Uri.parse('${ApiServicio._baseUrl}/lookup.php?i=$idDrink');
     final res = await http.get(uri);
     if (res.statusCode != 200) return null;
     final data = json.decode(res.body) as Map<String, dynamic>;
     final drinks = data['drinks'] as List?;
     return (drinks == null || drinks.isEmpty) ? null : drinks.first as Map<String, dynamic>;
   }
-  /// (Opcional) Lista de ingredientes válidos para poblar tu UI/es→en.
-  /// Endpoint: `list.php?i=list`. :contentReference[oaicite:2]{index=2}
-  Future<List<String>> listIngredients() async {
-    final uri = Uri.parse('$ApiServicio/list.php?i=list');
-    final res = await http.get(uri);
-    if (res.statusCode != 200) return [];
-    final data = json.decode(res.body) as Map<String, dynamic>;
-    final items = (data['drinks'] as List?) ?? [];
-    return items
-        .map((e) => (e as Map<String, dynamic>)['strIngredient1'] as String?)
-        .whereType<String>()
-        .toList();
-  }
+  // Lista de ingredientes válidos para poblar tu UI (ESTA VERSIÓN DEBERÍA SER ELIMINADA O NO USADA)
+  // Future<List<String>> listIngredients() async {
+  //   final uri = Uri.parse('${ApiServicio._baseUrl}/list.php?i=list'); // URL Corregida aquí también
+  //   final res = await http.get(uri);
+  //   if (res.statusCode != 200) return [];
+  //   final data = json.decode(res.body) as Map<String, dynamic>;
+  //   final items = (data['drinks'] as List?) ?? [];
+  //   return items
+  //       .map((e) => (e as Map<String, dynamic>)['strIngredient1'] as String?)
+  //       .whereType<String>()
+  //       .toList();
+  // }
 }
