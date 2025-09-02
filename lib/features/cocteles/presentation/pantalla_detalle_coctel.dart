@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:coctel_app/core/models/coctel.dart';
 import '../../../core/services/favoritos_manager.dart';
 import '../../../core/services/theme_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PantallaDetalleCoctel extends StatefulWidget {
   final Coctel coctel;
@@ -101,16 +102,43 @@ class PantallaDetalleCoctelState extends State<PantallaDetalleCoctel> {
                                 ],
                               ),
                             ),
-                            // 🔹 Botones de enviar y favoritos
+
+                            // Botones de enviar y favoritos
                             Row(
                               children: [
                                 IconButton(
                                   icon: const Icon(Icons.share, color: Colors.white),
-                                  onPressed: () {
-                                    // Lógica para compartir el cóctel
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text("Compartir cóctel")),
-                                    );
+                                  onPressed: () async {
+                                    final coctel = widget.coctel;
+                                    String ingredientesFormateados = coctel.ingredientes.map((ing) => "• ${ing.cantidad.isNotEmpty ? "${ing.cantidad} " : ""}${ing.nombre}").join('\n');
+
+                                    // Mensaje que se vera en el mensaje
+                                    String mensaje = '''
+                                   ¡Mira este cóctel! 🍹
+                                   *${coctel.nombre}*
+
+                                   *Ingredientes:*
+                                   $ingredientesFormateados
+
+                                   *Instrucciones:*
+                                   ${coctel.instrucciones}
+                                   ''';
+
+                                    // Codificar el mensaje para la URL
+                                    String mensajeCodificado = Uri.encodeComponent(mensaje);
+
+                                    // Crear la URL de WhatsApp (sin número de teléfono para que el usuario elija el contacto)
+                                    final Uri url = Uri.parse("whatsapp://send?text=$mensajeCodificado");
+
+                                    if (await canLaunchUrl(url)) {
+                                      await launchUrl(url);
+                                    } else {
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text("No se pudo abrir WhatsApp.")),
+                                        );
+                                      }
+                                    }
                                   },
                                 ),
                                 Consumer<FavoritosManager>(
