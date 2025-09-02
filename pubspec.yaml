@@ -29,6 +29,12 @@ dependencies:
   # Para la gestión del estado del tema (modo claro/oscuro)
   provider: ^6.0.0
 
+  # Permite encontrar rutas comunes en el sistema de archivos del dispositivo móvil
+  path_provider: ^2.1.3
+
+  # Para manipulación de rutas
+  path: ^1.9.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
