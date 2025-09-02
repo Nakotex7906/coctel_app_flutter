@@ -25,16 +25,17 @@ class PantallaDetalleCoctelState extends State<PantallaDetalleCoctel> {
     final textColor = isDarkMode ? Colors.white : Colors.black87;
     final hintColor = isDarkMode ? Colors.white60 : Colors.grey.shade600;
     final contentCardColor = isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFF2196F3);
-    final primaryBlue = const Color(0xFF05AFF2); // Definir el azul primario
+    final primaryBlue = const Color(0xFF05AFF2);
 
     return Scaffold(
       backgroundColor: scaffoldColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        // 🔹 Flecha de regresar en círculo azul
+
+        // Flecha de regresar en círculo azul
         leading: Padding(
-          padding: const EdgeInsets.only(left: 16.0, top: 8.0), // Ajustar el padding si es necesario
+          padding: const EdgeInsets.only(left: 16.0, top: 8.0),
           child: CircleAvatar(
             backgroundColor: primaryBlue,
             child: IconButton(
@@ -43,7 +44,7 @@ class PantallaDetalleCoctelState extends State<PantallaDetalleCoctel> {
             ),
           ),
         ),
-        actions: [], // Eliminamos los actions aquí ya que los botones van en el Positioned
+        actions: [],
       ),
       extendBodyBehindAppBar: true,
       body: SingleChildScrollView(
