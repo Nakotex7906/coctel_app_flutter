@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
 import '../../../core/services/api_servicio.dart';
-import '../../../core/data/ingredients_map.dart'; // Mapa ES→EN que vimos antes
+import '../../../core/data/ingredients_map.dart';
 import '../../../core/models/drink_summary.dart';
 
 class PantallaMisIngredientes extends StatefulWidget {
@@ -31,8 +30,8 @@ class _PantallaMisIngredientesState extends State<PantallaMisIngredientes> {
   List<DrinkSummary> _resultados = [];
 
   String _ingredientImgUrl(String apiName) {
+
     // Imágenes públicas de ingredientes de TheCocktailDB.
-    // -Small.png (100x100), -Medium.png (350x350) o sin sufijo (700x700). :contentReference[oaicite:1]{index=1}
     final token = Uri.encodeComponent(apiName);
     return 'https://www.thecocktaildb.com/images/ingredients/$token-Medium.png';
   }
@@ -41,8 +40,9 @@ class _PantallaMisIngredientesState extends State<PantallaMisIngredientes> {
     if (_seleccionadosEs.isEmpty) return;
     setState(() => _loading = true);
 
+    // ES→EN para la API
     final tokens = _seleccionadosEs
-        .map((es) => esToApi[es] ?? es) // ES→EN para la API
+        .map((es) => esToApi[es] ?? es)
         .toList();
 
     final lista = await _api.filterByIngredients(tokens);
@@ -61,7 +61,7 @@ class _PantallaMisIngredientesState extends State<PantallaMisIngredientes> {
   }
 
   Future<void> _mostrarDetalle(DrinkSummary d) async {
-    final data = await _api.lookupDrink(d.id); // lookup.php?i=ID :contentReference[oaicite:2]{index=2}
+    final data = await _api.lookupDrink(d.id);
     if (!mounted) return;
     if (data == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -145,13 +145,14 @@ class _PantallaMisIngredientesState extends State<PantallaMisIngredientes> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: canSearch ? _buscar : null,
         icon: _loading ? const CircularProgressIndicator() : const Icon(Icons.search),
-        label: const Text('Buscar tragos'),
+        label: const Text('Buscar'),
       ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            // --- Sección: Ingredientes (selección) ---
+
+            // Sección: Ingredientes (selección)
             const Text('Selecciona tus ingredientes',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
@@ -242,7 +243,7 @@ class _PantallaMisIngredientesState extends State<PantallaMisIngredientes> {
             ),
             const SizedBox(height: 20),
 
-            // --- Sección: Resultados ---
+            // Sección: Resultados
             if (_resultados.isNotEmpty) ...[
               Text('Resultados (${_resultados.length})',
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
@@ -298,7 +299,7 @@ class _PantallaMisIngredientesState extends State<PantallaMisIngredientes> {
               const SizedBox(height: 4),
               const Text('Sin coincidencias con esa combinación.'),
             ],
-            const SizedBox(height: 100), // espacio bajo el FAB
+            const SizedBox(height: 100),
           ],
         ),
       ),
