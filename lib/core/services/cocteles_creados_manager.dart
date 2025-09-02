@@ -32,9 +32,53 @@ class CoctelesCreadosManager extends ChangeNotifier {
   }
 
   Future<void> agregarCoctel(Coctel coctel) async {
-    _coctelesCreados.add(coctel);
-    await _guardar();
-    notifyListeners();
+
+    // Se asegura de que no haya duplicados por ID al agregar
+    if (!_coctelesCreados.any((c) => c.id == coctel.id)) {
+      _coctelesCreados.add(coctel);
+      await _guardar();
+      notifyListeners();
+    } else {
+      if (kDebugMode) {
+        print("Intento de agregar cóctel con ID duplicado: ${coctel.id}");
+      }
+    }
+  }
+
+  // Eliminar un cóctel por su ID
+  Future<void> eliminarCoctel(String coctelId) async {
+    final originalLength = _coctelesCreados.length;
+    _coctelesCreados.removeWhere((coctel) => coctel.id == coctelId);
+    if (_coctelesCreados.length < originalLength) {
+
+      // Solo guardar y notificar si algo cambió
+      await _guardar();
+      notifyListeners();
+      if (kDebugMode) {
+        print("Cóctel eliminado con ID: $coctelId");
+      }
+    } else {
+      if (kDebugMode) {
+        print("No se encontró cóctel para eliminar con ID: $coctelId");
+      }
+    }
+  }
+
+  // Actualizar un cóctel existente
+  Future<void> actualizarCoctel(Coctel coctelActualizado) async {
+    final index = _coctelesCreados.indexWhere((coctel) => coctel.id == coctelActualizado.id);
+    if (index != -1) {
+      _coctelesCreados[index] = coctelActualizado;
+      await _guardar();
+      notifyListeners();
+      if (kDebugMode) {
+        print("Cóctel actualizado con ID: ${coctelActualizado.id}");
+      }
+    } else {
+      if (kDebugMode) {
+        print("No se encontró cóctel para actualizar con ID: ${coctelActualizado.id}");
+      }
+    }
   }
 
   Future<void> _guardar() async {
