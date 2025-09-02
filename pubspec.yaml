@@ -35,6 +35,9 @@ dependencies:
   # Para manipulación de rutas
   path: ^1.9.0
 
+  # Para abrir URLs (como WhatsApp)
+  url_launcher: ^6.2.6 # Puedes usar la última versión estable
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
