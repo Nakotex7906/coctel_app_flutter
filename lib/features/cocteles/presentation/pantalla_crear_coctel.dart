@@ -1,5 +1,6 @@
 import 'package:coctel_app/core/models/coctel.dart';
 import 'package:coctel_app/core/models/ingrediente.dart';
+import 'package:coctel_app/core/services/api_servicio.dart'; // Asegúrate que esta importación sea correcta
 import 'package:coctel_app/core/services/cocteles_creados_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,8 +11,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 class PantallaCrearCoctel extends StatefulWidget {
-
-  // Para pasar el cóctel a editar
   final Coctel? coctelParaEditar;
 
   const PantallaCrearCoctel({super.key, this.coctelParaEditar});
@@ -30,13 +29,22 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
   String? _existingImageFilePath;
   final ImagePicker _picker = ImagePicker();
 
-  // Helper para saber si estamos editando
+  // Para el selector de Categoría
+  String? _selectedCategory;
+  List<String> _apiCategories = [];
+  bool _isLoadingCategories = true;
+
+  // Para el selector de Tipo de Alcohol
+  final List<String> _opcionesAlcohol = ['Con Alcohol', 'Sin Alcohol', 'Opcional'];
+  String? _selectedAlcohol;
+
   bool get _isEditing => widget.coctelParaEditar != null;
 
   @override
   void initState() {
     super.initState();
     final coctel = widget.coctelParaEditar;
+
     _nombreController = TextEditingController(text: coctel?.nombre ?? '');
     _descripcionController = TextEditingController(text: coctel?.instrucciones ?? '');
 
@@ -54,7 +62,55 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
 
     if (coctel?.imagenUrl.isNotEmpty == true && coctel!.imagenUrl.startsWith('/')) {
       _existingImageFilePath = coctel.imagenUrl;
-      _imageFile = File(coctel.imagenUrl); 
+      _imageFile = File(coctel.imagenUrl);
+    }
+
+    // Preselección para el tipo de alcohol
+    if (coctel != null && _opcionesAlcohol.contains(coctel.alcohol)) {
+      _selectedAlcohol = coctel.alcohol;
+    } else {
+      _selectedAlcohol = _opcionesAlcohol[0]; // Valor por defecto: 'Con Alcohol'
+    }
+
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    setState(() {
+      _isLoadingCategories = true;
+      // Para evitar error de validación mientras carga si se intenta guardar muy rápido
+      _apiCategories = ['Cargando categorías...'];
+      _selectedCategory = _apiCategories.first;
+    });
+    try {
+      final categories = await ApiServicio.obtenerCategorias();
+      if (mounted) {
+        setState(() {
+          _apiCategories = ['Sin categoría específica', ...categories.map((c) => c.replaceAll('_', ' '))];
+
+          final coctel = widget.coctelParaEditar;
+          if (coctel?.categoria != null && _apiCategories.contains(coctel!.categoria)) {
+            _selectedCategory = coctel.categoria;
+          } else if (_apiCategories.isNotEmpty) {
+            // Si no hay categoría en el cóctel a editar o no está en la lista,
+            // o si es un cóctel nuevo, seleccionar "Sin categoría específica"
+            _selectedCategory = 'Sin categoría específica';
+          }
+          _isLoadingCategories = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _apiCategories = ['Error al cargar categorías'];
+          _selectedCategory = _apiCategories.first;
+          _isLoadingCategories = false;
+        });
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar categorías: $e')),
+      );
+      print('Error al cargar categorías: $e');
     }
   }
 
@@ -63,8 +119,6 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
     if (pickedFile != null) {
       setState(() {
         _imageFile = File(pickedFile.path);
-
-        // Si se elige nueva imagen, la antigua ya no se usa
         _existingImageFilePath = null;
       });
     }
@@ -96,23 +150,19 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
 
   void _saveCoctel() async {
     if (!(_formKey.currentState?.validate() ?? false)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor, corrige los errores del formulario.')),
-        );
-        return;
-    }
-    if (_nombreController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El nombre del cóctel no puede estar vacío.')),
+        const SnackBar(content: Text('Por favor, corrige los errores del formulario.')),
       );
       return;
     }
+    // No es necesario validar _nombreController.text.isEmpty aquí,
+    // ya que el _buildTextFormField para el nombre ya tiene un validador.
 
     String imagePathToSave = _existingImageFilePath ?? '';
-    if (_imageFile != null && _imageFile!.path != _existingImageFilePath) { // Si hay nueva imagen o se cambió la existente
-        imagePathToSave = await _saveImagePermanently(_imageFile!);
+    if (_imageFile != null && _imageFile!.path != _existingImageFilePath) {
+      imagePathToSave = await _saveImagePermanently(_imageFile!);
     }
-    
+
     final List<Ingrediente> ingredientes = [];
     for (int i = 0; i < _ingredienteControllers.length; i++) {
       if (_ingredienteControllers[i].text.isNotEmpty) {
@@ -123,14 +173,25 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
       }
     }
 
-    // Corregir esto mas tarde para alcohol y categoria
+    String categoriaParaGuardar;
+    if (_selectedCategory == 'Sin categoría específica' ||
+        _selectedCategory == null || // Por si acaso
+        _selectedCategory == 'Error al cargar categorías' ||
+        _selectedCategory == 'Cargando categorías...') {
+      categoriaParaGuardar = ""; // Asignar String vacío si es Coctel.categoria = String
+      // o null si es Coctel.categoria = String?
+      // Asumimos String según la discusión anterior
+    } else {
+      categoriaParaGuardar = _selectedCategory!;
+    }
+
     final coctelData = Coctel(
       id: _isEditing ? widget.coctelParaEditar!.id : DateTime.now().millisecondsSinceEpoch.toString(),
       nombre: _nombreController.text,
       instrucciones: _descripcionController.text,
       imagenUrl: imagePathToSave,
-      alcohol: 'Personalizado',
-      categoria: 'Personalizado',
+      alcohol: _selectedAlcohol!, // El validador asegura que no es nulo
+      categoria: categoriaParaGuardar,
       ingredientes: ingredientes,
       isLocal: true,
     );
@@ -150,10 +211,7 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
       SnackBar(content: Text(message)),
     );
 
-    // Regresar a la pantalla anterior (lista de mis cócteles)
     Navigator.pop(context);
-
-    // Si estamos editando, hacer pop una vez más para cerrar la pantalla de detalle si estaba abierta
     if (_isEditing) {
       Navigator.pop(context);
     }
@@ -192,7 +250,7 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          _isEditing ? "Editar Cóctel" : "Crear Cóctel", // MODIFICADO
+          _isEditing ? "Editar Cóctel" : "Crear Cóctel",
           style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
         ),
         actions: [
@@ -222,34 +280,122 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
                     borderRadius: BorderRadius.circular(15),
                     image: _imageFile != null
                         ? DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover)
-                        : (_existingImageFilePath != null && _existingImageFilePath!.isNotEmpty 
-                            ? DecorationImage(image: FileImage(File(_existingImageFilePath!)), fit: BoxFit.cover) 
-                            : null),
+                        : (_existingImageFilePath != null && _existingImageFilePath!.isNotEmpty
+                        ? DecorationImage(image: FileImage(File(_existingImageFilePath!)), fit: BoxFit.cover)
+                        : null),
                   ),
                   child: _imageFile == null && (_existingImageFilePath == null || _existingImageFilePath!.isEmpty)
                       ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.camera_alt, size: 50, color: hintColor),
-                            const SizedBox(height: 10),
-                            Text("Toca para añadir una imagen", style: TextStyle(color: hintColor)),
-                          ],
-                        )
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.camera_alt, size: 50, color: hintColor),
+                      const SizedBox(height: 10),
+                      Text("Toca para añadir una imagen", style: TextStyle(color: hintColor)),
+                    ],
+                  )
                       : null,
                 ),
               ),
               const SizedBox(height: 20),
               Text("Nombre del Cóctel", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 8),
-              _buildTextFormField(_nombreController, "Ej. Mojito Clásico", isDarkMode: isDarkMode, 
-                validator: (value) => value == null || value.isEmpty ? 'El nombre no puede estar vacío' : null
-              ),
+              _buildTextFormField(_nombreController, "Ej. Mojito Clásico", isDarkMode: isDarkMode,
+                  validator: (value) => value == null || value.isEmpty ? 'El nombre no puede estar vacío' : null),
               const SizedBox(height: 20),
               Text("Preparación", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
               const SizedBox(height: 8),
-              _buildTextFormField(_descripcionController, "Una refrescante mezcla...", maxLines: 4, isDarkMode: isDarkMode, 
-                validator: (value) => value == null || value.isEmpty ? 'La preparación no puede estar vacía' : null
+              _buildTextFormField(_descripcionController, "Una refrescante mezcla...", maxLines: 4, isDarkMode: isDarkMode,
+                  validator: (value) => value == null || value.isEmpty ? 'La preparación no puede estar vacía' : null),
+
+              const SizedBox(height: 20),
+              Text("Categoría", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+              const SizedBox(height: 8),
+              _isLoadingCategories
+                  ? const Center(child: CircularProgressIndicator())
+                  : DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                items: _apiCategories.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value, style: TextStyle(color: textColor)),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedCategory = newValue;
+                  });
+                },
+                decoration: InputDecoration(
+                  fillColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.grey.shade100,
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.red, width: 1),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                ),
+                dropdownColor: cardColor,
+                style: TextStyle(color: textColor),
+                validator: (value) {
+                  if (value == null || value == 'Error al cargar categorías' || value == 'Cargando categorías...') {
+                    return 'Por favor, selecciona una categoría válida';
+                  }
+                  // "Sin categoría específica" es válido
+                  return null;
+                },
               ),
+
+              const SizedBox(height: 20),
+              Text("Tipo de Alcohol", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textColor)),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                value: _selectedAlcohol,
+                items: _opcionesAlcohol.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value, style: TextStyle(color: textColor)),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedAlcohol = newValue;
+                  });
+                },
+                decoration: InputDecoration(
+                  fillColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.grey.shade100,
+                  filled: true,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.red, width: 1),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                ),
+                dropdownColor: cardColor,
+                style: TextStyle(color: textColor),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor, selecciona un tipo de alcohol';
+                  }
+                  return null;
+                },
+              ),
+
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -275,37 +421,31 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
                         Expanded(
                           flex: 3,
                           child: _buildTextFormField(_ingredienteControllers[index], "Ej. Ron Blanco", isDarkMode: isDarkMode,
-                            validator: (value) {
-
-                              // Solo validar si el de medida también tiene texto o es el único ingrediente
-                              if (_medidaControllers[index].text.isNotEmpty && (value == null || value.isEmpty)) {
-                                return 'Nombre ing.';
-                              }
-                              return null;
-                            }
-                          ),
+                              validator: (value) {
+                                if (_medidaControllers[index].text.isNotEmpty && (value == null || value.isEmpty)) {
+                                  return 'Nombre ing.';
+                                }
+                                return null;
+                              }),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           flex: 2,
                           child: _buildTextFormField(_medidaControllers[index], "Ej. 2 oz", isDarkMode: isDarkMode,
-                           validator: (value) {
-                              if (_ingredienteControllers[index].text.isNotEmpty && (value == null || value.isEmpty)) {
-                                return 'Medida ing.';
-                              }
-                              return null;
-                            }
-                          ),
+                              validator: (value) {
+                                if (_ingredienteControllers[index].text.isNotEmpty && (value == null || value.isEmpty)) {
+                                  return 'Medida ing.';
+                                }
+                                return null;
+                              }),
                         ),
                         (_ingredienteControllers.length > 1)
                             ? IconButton(
-                                padding: EdgeInsets.zero,
-                                icon: const Icon(Icons.remove_circle, color: Color(0xFFF44336)),
-                                onPressed: () => _removeIngredienteField(index),
-                              )
-
-                        // Espacio para alinear si solo hay un ingrediente
-                            : const SizedBox(width: 48),
+                          padding: EdgeInsets.zero,
+                          icon: const Icon(Icons.remove_circle, color: Color(0xFFF44336)),
+                          onPressed: () => _removeIngredienteField(index),
+                        )
+                            : const SizedBox(width: 48), // Espacio para alinear
                       ],
                     ),
                   );
@@ -334,12 +474,12 @@ class PantallaCrearCoctelState extends State<PantallaCrearCoctel> {
           borderSide: BorderSide.none,
         ),
         errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Colors.red, width: 1),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.red, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Colors.red, width: 2),
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.red, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       ),
